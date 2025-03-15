@@ -1,0 +1,349 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: black;
+    color: #e7e7e7;
+    min-height: 100vh;
+    line-height: 1.5;
+    position: relative;
+    padding-bottom: 60px;
+}
+
+:root {
+    --primary-clr: #00ffff;
+    --secondary-clr: #00ff9d;
+    --text-color: #ffffff;
+    --bg-color: #000000;
+}
+
+.image-gradient {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0.5;
+    z-index: -1;
+}
+
+.layer-blur {
+    height: 0;
+    width: 30rem;
+    position: absolute;
+    top: 20%;
+    right: 0;
+    box-shadow: 0 0 700px 15px white;
+    rotate: -30deg;
+    z-index: -1;
+}
+
+.main-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    padding: 0 2rem;
+    max-width: 1400px;
+    position: absolute;
+    top: 14%;
+    /* Zmniejszono z 25% aby dać więcej miejsca */
+    left: 48%;
+    transform: translateX(-50%);
+    width: 100%;
+    scale: 90%;
+}
+
+/* nice scroll bar */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f5f5f5;
+    border-radius: 50px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-clr);
+    border-radius: 50px;
+}
+
+.robot-section {
+    flex: 1;
+    max-width: 50%;
+    height: 75vh;
+    /* Zwiększono z 60vh */
+    position: relative;
+    top:-4.3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ai-section {
+    flex: 1;
+    max-width: 50%;
+    padding-left: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 90vh;
+    /* Zwiększono z 60vh aby dopasować do lewej strony */
+}
+
+.container {
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+/* Style dla formularza treningu */
+.training-container {
+    max-width: 600px;
+    /* Zwiększono z 500px */
+    width: 100%;
+    /* Dodano dla lepszego wykorzystania przestrzeni */
+    background: #111;
+    padding: 30px;
+    /* Zwiększono z 20px */
+    border-radius: 12px;
+    box-shadow: 0 0 15px  #00ffff;
+    margin: auto;
+}
+
+h2 {
+    text-align: center;
+    color: #ffffff;
+    font-size: 1.8em;
+    /* Zwiększono rozmiar */
+    margin-bottom: 20px;
+    /* Dodano odstęp */
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 15px;
+    /* Zwiększono z 10px */
+    font-size: 1.1em;
+    /* Zwiększono rozmiar */
+}
+
+input,
+select {
+    width: 100%;
+    padding: 12px;
+    /* Zwiększono z 10px */
+    margin: 12px 0;
+    /* Zwiększono z 10px */
+    border: 2px solid  #00ffff;
+    background: #222;
+    color: white;
+    border-radius: 8px;
+    transition: 0.3s;
+    font-size: 1.05em;
+    /* Zwiększono rozmiar */
+}
+
+button {
+    width: 100%;
+    background:  #00ffff;
+    color: #000;
+    padding: 15px;
+    /* Zwiększono z 12px */
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 0 10px  #00ffff;
+    font-size: 1.1em;
+    /* Zwiększono rozmiar */
+    margin-top: 20px;
+    /* Dodano odstęp */
+}
+
+
+
+#loading {
+    display: block;
+    margin: 10px auto;
+    color:  #00ffff;
+    font-weight: bold;
+}
+
+/* Kontener wyników w stylu ChatGPT - ZMODYFIKOWANE */
+.result-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 2px solid  #76fafa;
+    border-radius: 10px;
+    background-color: #222;
+    min-height: 150px;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    text-align: left;
+    line-height: 1.6;
+}
+
+/* Style dla wiadomości ChatGPT */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.message-row {
+    width: 100%;
+    display: flex;
+    padding: 16px 24px;
+}
+
+.user-row {
+    background-color: #343541;
+}
+
+.ai-row {
+    background-color: #222;
+}
+
+.message-avatar {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    margin-right: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 3px;
+}
+
+.user-avatar {
+    background-color: #5c5c7b;
+    color: #e1e1e1;
+}
+
+.ai-avatar {
+    background-color: #10a37f;
+    color: white;
+}
+
+.message-content {
+    flex: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Formatowanie jak na zdjęciu */
+.message-content h1 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: white;
+}
+
+/* Style dla list numerowanych - jak na zdjęciu */
+.message-content ol {
+    list-style-type: decimal;
+    margin: 0 0 15px 0;
+    padding-left: 0;
+    counter-reset: item;
+}
+
+.message-content ol>li {
+    counter-increment: item;
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.message-content ol>li::before {
+    content: counter(item) ". ";
+    display: inline-block;
+    font-weight: bold;
+    width: auto;
+}
+
+/* Style dla list nienumerowanych - jak na zdjęciu */
+.message-content ul {
+    list-style-type: none;
+    margin: 8px 0;
+    padding-left: 25px;
+}
+
+.message-content ul>li {
+    position: relative;
+    margin-bottom: 8px;
+    font-weight: normal;
+}
+
+.message-content ul>li::before {
+    content: "•";
+    position: absolute;
+    left: -20px;
+    color: white;
+}
+
+
+/* Style dla checkboxów */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    /* Zwiększono z 5px */
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: auto;
+    margin-right: 12px;
+    /* Zwiększono z 10px */
+    transform: scale(1.2);
+    /* Powiększenie checkboxa */
+}
+
+.checkbox-container label {
+    margin: 0;
+    display: inline;
+    font-size: 1.05em;
+    /* Zwiększono rozmiar */
+}
+
+/* Animacja pisania */
+.typing-animation {
+    display: inline-block;
+    overflow: hidden;
+    white-space: normal;
+    border-right: 2px solid #10a37f;
+    animation: typing-cursor 0.7s step-end infinite;
+    word-wrap: break-word;
+}
+
+/* Styl informacji o limicie słów */
+.word-limit-info {
+    color: #888;
+    font-size: 0.8em;
+    font-style: italic;
+    margin-top: 5px;
+}
+
+@keyframes typing-cursor {
+
+    from,
+    to {
+        border-color: transparent
+    }
+
+    50% {
+        border-color: #10a37f
+    }
+}

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asystent Gemini AI - Dieta</title>
+    <link rel="stylesheet" href="CSS/index.css">
+    <link rel="stylesheet" href="CSS/dieta.css">
+
+<body>
+
+    <header>
+        <h1>
+            <a href="HomePage.html">
+                <img class="logo" src="images/w.png">
+            </a>
+        </h1>
+
+        <div class="hamburger-menu">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <nav>
+            <a href="HomePage.html">Strona Główna</a>
+            <a href="kalendarz.html">KALENDARZ</a>
+            <a href="PlanTreningowy.html">Plan Treningowy</a>
+            <a href="dieta.html">Dieta</a>
+            <a href="Analiza.html">Analiza Sylwetki</a>
+            <a href="Zespol.html">O Zespole</a>
+        </nav>
+
+        <div class="menu-mobile">
+            <a href="HomePage.html">Strona Główna</a>
+            <a href="kalendarz.html">KALENDARZ</a>
+            <a href="PlanTreningowy.html">Plan Treningowy</a>
+            <a href="dieta.html">Dieta</a>
+            <a href="Analiza.html">Analiza Sylwetki</a>
+            <a href="Zespol.html">O Zespole</a>
+        </div>
+    </header>
+
+    <img class="image" src="images/gradient.png" alt="gradient">
+    <div class="layer-blur"></div>
+
+    <!-- Wyśrodkowany układ dwukolumnowy -->
+    <div class="main-content">
+        <!-- Lewa kolumna z robotem -->
+        <section class="robot-section">
+            <spline-viewer url="https://prod.spline.design/ndPs8vI3-zA3dYRF/scene.splinecode"></spline-viewer>
+        </section>
+
+        <!-- Prawa kolumna z AI -->
+        <section class="ai-section">
+            <div class="container">
+                <div class="form-container">
+                    <div class="input-heading">Zapytaj o dietę i odżywianie</div>
+
+                    <!-- Informacja o trybie dietetycznym -->
+                    <div id="diet-mode-info" class="diet-mode-info">
+                        <strong>Tryb asystenta dietetycznego:</strong> Odpowiadam wyłącznie na pytania związane z dietą,
+                        odżywianiem i zdrowiem.
+                    </div>
+
+                    <input type="text" id="prompt-input" placeholder="Zadaj pytanie dotyczące diety lub odżywiania...">
+
+                    <!-- Usunięto wszystkie przyciski -->
+                    <script type="module"
+                        src="https://unpkg.com/@splinetool/viewer@1.9.77/build/spline-viewer.js"></script>
+                </div>
+
+                <div class="loading" id="loading">Generowanie odpowiedzi</div>
+
+                <div class="result-container" id="result">
+                    <!-- Tutaj pojawi się odpowiedź AI -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+
+
+    <script type="module">
+        // Import biblioteki Google Generative AI
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // Inicjalizacja API z kluczem
+        const genAI = new GoogleGenerativeAI("AIzaSyBo-TkZvywAY5l6AglPCvsoMPOlTocAfXE");
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        // Elementy DOM
+        const promptInput = document.getElementById("prompt-input");
+        const resultElement = document.getElementById("result");
+        const loadingElement = document.getElementById("loading");
+        const inputHeading = document.querySelector(".input-heading");
+
+        // Flaga trybu dietetycznego asystenta - zawsze włączona
+        let dietAssistantMode = true;
+
+        // Historia konwersacji
+        let chatHistory = [];
+
+        // Inicjalizacja specjalistycznego chatu dietetycznego
+        let dietChat = model.startChat({
+            history: [],
+            generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 2048,
+            }
+        });
+
+        // Ulepszona funkcja do formatowania tekstu podobnie jak w ChatGPT
+        function formatText(text) {
+            // Obsługa standardowych tagów Markdown
+            let formattedText = text;
+
+            // Bloki kodu - muszą być przetwarzane przed innymi elementami
+            formattedText = formattedText.replace(/``````/g, function (match, language, code) {
+                return `<pre><code class="${language}">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+            });
+
+            // Nagłówki
+            formattedText = formattedText.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+            formattedText = formattedText.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+            formattedText = formattedText.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+
+            // Cytaty
+            formattedText = formattedText.replace(/^> (.*?)$/gm, '<blockquote>$1</blockquote>');
+
+            // Tabele
+            formattedText = formattedText.replace(/(\|.*\|\n)(\|[-:| ]+\|\n)(\|.*\|\n)+/g, function (match) {
+                // Przetwarzanie tabeli
+                const rows = match.trim().split('\n');
+                const headerRow = rows[0];
+                const alignmentRow = rows[1];
+                const dataRows = rows.slice(2);
+
+                // Tworzenie nagłówka tabeli
+                const headers = headerRow.split('|').slice(1, -1);
+                const alignments = alignmentRow.split('|').slice(1, -1).map(cell => {
+                    if (cell.trim().endsWith(':') && cell.trim().startsWith(':')) return 'center';
+                    if (cell.trim().endsWith(':')) return 'right';
+                    return 'left';
+                });
+
+                let tableHTML = '<table><thead><tr>';
+                headers.forEach((header, index) => {
+                    tableHTML += `<th style="text-align: ${alignments[index]}">${header.trim()}</th>`;
+                });
+                tableHTML += '</tr></thead><tbody>';
+
+                // Tworzenie wierszy tabeli
+                dataRows.forEach(row => {
+                    const cells = row.split('|').slice(1, -1);
+                    tableHTML += '<tr>';
+                    cells.forEach((cell, index) => {
+                        tableHTML += `<td style="text-align: ${alignments[index]}">${cell.trim()}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+
+                tableHTML += '</tbody></table>';
+                return tableHTML;
+            });
+
+            // Listy uporządkowane i nieuporządkowane
+            const processedLines = [];
+            const lines = formattedText.split('\n');
+
+            let inList = false;
+            let listType = '';
+            let listItems = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                if (line.match(/^[0-9]+\.\s+.+/)) {
+                    // Lista numerowana
+                    if (!inList || listType !== 'ol') {
+                        if (inList) {
+                            // Zakończ poprzednią listę
+                            processedLines.push(`</${listType}>`);
+                        }
+                        inList = true;
+                        listType = 'ol';
+                        processedLines.push('<ol>');
+                    }
+                    const content = line.replace(/^[0-9]+\.\s+/, '');
+                    processedLines.push(`<li>${content}</li>`);
+                } else if (line.match(/^[\*\-]\s+.+/)) {
+                    // Lista nienumerowana
+                    if (!inList || listType !== 'ul') {
+                        if (inList) {
+                            // Zakończ poprzednią listę
+                            processedLines.push(`</${listType}>`);
+                        }
+                        inList = true;
+                        listType = 'ul';
+                        processedLines.push('<ul>');
+                    }
+                    const content = line.replace(/^[\*\-]\s+/, '');
+                    processedLines.push(`<li>${content}</li>`);
+                } else {
+                    // Zwykły tekst - zamykamy listę jeśli była aktywna
+                    if (inList) {
+                        processedLines.push(`</${listType}>`);
+                        inList = false;
+                    }
+                    processedLines.push(line);
+                }
+            }
+
+            // Zamknij listę na końcu, jeśli istnieje
+            if (inList) {
+                processedLines.push(`</${listType}>`);
+            }
+
+            formattedText = processedLines.join('\n');
+
+            // Formatowanie tekstu - pogrubienie, kursywa
+            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            formattedText = formattedText.replace(/__(.*?)__/g, '<strong>$1</strong>');
+            formattedText = formattedText.replace(/_(.*?)_/g, '<em>$1</em>');
+
+            // Kod inline
+            formattedText = formattedText.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Przekreślenie
+            formattedText = formattedText.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+            // Linki
+            formattedText = formattedText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+            // Podświetlenie
+            formattedText = formattedText.replace(/==([^=]+)==/g, '<mark>$1</mark>');
+
+            // Pozioma linia
+            formattedText = formattedText.replace(/^\-\-\-$/gm, '<hr>');
+
+            // Paragrafy - dodajemy na końcu przetwarzania
+            const paragraphs = formattedText.split('\n\n');
+            formattedText = paragraphs
+                .map(para => {
+                    // Nie opakowujemy w paragraf, jeśli zawiera już znaczniki HTML lub jest pusty
+                    if (para.trim() === '' ||
+                        para.trim().startsWith('<') && para.trim().endsWith('>') ||
+                        para.includes('<h') ||
+                        para.includes('<ul') ||
+                        para.includes('<ol') ||
+                        para.includes('<pre') ||
+                        para.includes('<blockquote') ||
+                        para.includes('<table')) {
+                        return para;
+                    }
+                    return `<p>${para}</p>`;
+                })
+                .join('\n\n');
+
+            // Pojedyncze przejścia do nowej linii w paragrafach
+            formattedText = formattedText.replace(/(<p>.*?)\n(.*?<\/p>)/g, '$1<br>$2');
+
+            return formattedText;
+        }
+
+        // Funkcja dodająca wiadomość do interfejsu z animacją pisania
+        function appendMessage(content, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'ai-message');
+
+            if (isUser) {
+                messageDiv.innerHTML = `<strong>Ty</strong> ${content}`;
+                resultElement.appendChild(messageDiv);
+                resultElement.scrollTop = resultElement.scrollHeight;
+            } else {
+                // Dodajemy wiadomość z placeholderem dla animacji pisania
+                const aiPrefix = `<strong>JACK.AI</strong> `;
+                messageDiv.innerHTML = aiPrefix + '<span class="typing-animation"></span>';
+                resultElement.appendChild(messageDiv);
+
+                // Formatowanie odpowiedzi AI
+                const formattedContent = formatText(content);
+                const typingAnimation = messageDiv.querySelector('.typing-animation');
+
+                // Pobieramy tekst bez HTML do animacji
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = formattedContent;
+                const plainText = tempDiv.textContent;
+
+                // Animacja pisania
+                let i = 0;
+                const speed = 10; // Szybkość pisania (im niższa wartość, tym szybciej)
+
+                function typeWriter() {
+                    if (i < plainText.length) {
+                        typingAnimation.textContent += plainText.charAt(i);
+                        i++;
+                        resultElement.scrollTop = resultElement.scrollHeight;
+                        setTimeout(typeWriter, speed);
+                    } else {
+                        // Po zakończeniu animacji, wyświetlamy pełną sformatowaną treść
+                        messageDiv.innerHTML = aiPrefix + formattedContent;
+                        resultElement.scrollTop = resultElement.scrollHeight;
+                    }
+                }
+
+                typeWriter();
+            }
+        }
+
+        // Funkcja czyszcząca interfejs przed nową konwersacją
+        function clearInterface() {
+            resultElement.innerHTML = '';
+            promptInput.value = '';
+        }
+
+        // Funkcja sprawdzająca, czy zapytanie dotyczy diety
+        async function isDietRelatedQuery(query) {
+            try {
+                // Przygotowanie promptu do sprawdzenia, czy pytanie dotyczy diety
+                const classificationPrompt = `
+        Oceń, czy poniższe pytanie dotyczy diety, żywienia, odżywiania, zdrowego stylu życia, kalorii, wartości odżywczych, składników diety, produktów spożywczych, alergii pokarmowych lub podobnych tematów związanych z jedzeniem i zdrowiem.
+        
+        Pytanie: "${query}"
+        
+        Odpowiedz tylko "TAK" jeśli pytanie jest związane z dietą lub "NIE" jeśli dotyczy innego tematu. Nic więcej nie dodawaj.`;
+
+                // Zadanie pytania do modelu
+                const result = await model.generateContent(classificationPrompt);
+                const responseText = result.response.text().trim().toUpperCase();
+
+                // Sprawdzenie odpowiedzi
+                return responseText.includes("TAK");
+            } catch (error) {
+                console.error("Błąd podczas klasyfikacji zapytania:", error);
+                // W przypadku błędu, zakładamy, że pytanie dotyczy diety
+                return true;
+            }
+        }
+
+        // Funkcja generująca odpowiedź
+        async function generateDietResponse() {
+            const prompt = promptInput.value.trim();
+
+            if (!prompt) {
+                return;
+            }
+
+            // Dodanie wiadomości użytkownika do interfejsu
+            appendMessage(prompt, true);
+
+            // Pokazanie ładowania
+            loadingElement.style.display = "block";
+
+            try {
+                // Sprawdzenie, czy pytanie dotyczy diety
+                const isDietQuestion = await isDietRelatedQuery(prompt);
+
+                if (!isDietQuestion) {
+                    // Jeśli pytanie nie dotyczy diety, zwróć komunikat
+                    appendMessage("Przepraszam, ale mogę odpowiadać wyłącznie na pytania związane z dietą, odżywianiem lub zdrowiem. Czy mogę pomóc w inny sposób związany z tą tematyką?", false);
+                } else {
+                    // Wzmocnienie pytania kontekstem dietetycznym
+                    const enhancedPrompt = `Jako ekspert ds. żywienia i dietetyki, odpowiedz na następujące pytanie: ${prompt}. 
+            Staraj się podać informacje oparte na faktach i badaniach naukowych. Jeśli to istotne, uwzględnij informacje o kaloriach, makroskładnikach i wartościach odżywczych.
+            
+            Formatuj tekst używając Markdown, aby odpowiedź była przejrzysta i łatwa do odczytania. Używaj nagłówków, list, pogrubień i innych elementów formatowania, gdy jest to odpowiednie.`;
+
+                    // Generowanie odpowiedzi używając chatu dietetycznego
+                    const result = await dietChat.sendMessage(enhancedPrompt);
+
+                    // Dodanie odpowiedzi AI do interfejsu
+                    appendMessage(result.response.text(), false);
+                }
+
+                // Czyszczenie pola wprowadzania
+                promptInput.value = "";
+
+            } catch (error) {
+                appendMessage(`Wystąpił błąd: ${error.message}`, false);
+                console.error("Błąd:", error);
+            } finally {
+                // Ukrycie ładowania
+                loadingElement.style.display = "none";
+            }
+        }
+
+        // Nasłuchiwanie klawisza Enter w polu tekstowym - teraz jedyny sposób interakcji
+        promptInput.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                generateDietResponse();
+            }
+        });
+
+        // Automatyczne wyświetlenie powitania przy starcie
+        window.addEventListener('DOMContentLoaded', () => {
+            // Powitanie od asystenta dietetycznego
+            appendMessage("Witaj! Jestem Twoim osobistym asystentem dietetycznym. Mogę odpowiadać na pytania dotyczące diety, odżywiania i zdrowia. Wpisz swoje pytanie i naciśnij Enter, aby otrzymać odpowiedź.", false);
+        });
+    </script>
+    <script src="JS/HamburgerMenu.js"></script>
+</body>
+
+</html>

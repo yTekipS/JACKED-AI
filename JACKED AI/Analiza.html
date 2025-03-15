@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analiza Sylwetki AI</title>
+  <link rel="stylesheet" href="CSS/index.css" />
+  <link rel="stylesheet" href="CSS/Analiza.css">
+
+  <style>
+    .robot-3d{
+      position: absolute;
+      right:-10%;
+      top: 9%;
+    }
+    .caly{
+      position: absolute;
+      top:10%;
+      left:20%;
+      scale: 105%;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>
+      <a href="HomePage.html">
+        <img class="logo" src="images/w.png" />
+      </a>
+    </h1>
+
+    <div class="hamburger-menu">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+
+    <nav>
+      <a href="HomePage.html">Strona Główna</a>
+      <a href="kalendarz.html">KALENDARZ</a>
+      <a href="PlanTreningowy.html">Plan Treningowy</a>
+      <a href="dieta.html">Dieta</a>
+      <a href="Analiza.html">Analiza Sylwetki</a>
+      <a href="Zespol.html">O Zespole</a>
+    </nav>
+
+    <div class="menu-mobile">
+      <a href="HomePage.html">Strona Główna</a>
+      <a href="kalendarz.html">KALENDARZ</a>
+      <a href="PlanTreningowy.html">Plan Treningowy</a>
+      <a href="dieta.html">Dieta</a>
+      <a href="Analiza.html">Analiza Sylwetki</a>
+      <a href="Zespol.html">O Zespole</a>
+    </div>
+  </header>
+
+  <img class="image" src="images/gradient.png" alt="gradient" />
+  <div class="layer-blur"></div>
+
+  <!-- Zmodyfikowany kontener analizatora przesunięty na środek i wyżej -->
+  <div class="caly">
+    <div class="analyzer-container">
+      <h2>Analiza Sylwetki AI</h2>
+
+      <!-- Pięknie oprawiony przycisk wyboru pliku -->
+      <div class="file-input-wrapper">
+        <label class="custom-file-button">
+          Wybierz zdjęcie sylwetki do analizy
+          <input type="file" id="image-input" accept="image/*">
+        </label>
+      </div>
+
+      <div class="image-container">
+        <span class="image-placeholder" id="placeholder-text">Tutaj pojawi się wybrane zdjęcie</span>
+        <img id="preview" style="display: none;">
+        <button id="remove-btn" class="remove-btn">✕</button>
+      </div>
+
+      <button id="analyze-btn">Analizuj sylwetkę</button>
+      <div id="result"></div>
+    </div>
+  </div>
+  <spline-viewer class="robot-3d" url="https://prod.spline.design/G6UtyHsOdHPKArcG/scene.splinecode"></spline-viewer>
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.77/build/spline-viewer.js"></script>
+  <script src="JS/HamburgerMenu.js"></script>
+  <script type="module">
+  import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+    const genAI = new GoogleGenerativeAI("AIzaSyBo-TkZvywAY5l6AglPCvsoMPOlTocAfXE");
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    
+    const fileInput = document.getElementById("image-input");
+    const preview = document.getElementById("preview");
+    const analyzeBtn = document.getElementById("analyze-btn");
+    const resultDiv = document.getElementById("result");
+    const removeBtn = document.getElementById("remove-btn");
+    const placeholderText = document.getElementById("placeholder-text");
+    
+    fileInput.addEventListener("change", function () {
+        if (this.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+                removeBtn.style.display = "block";
+                placeholderText.style.display = "none";
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+    
+    // Funkcja do usuwania zdjęcia
+    function removeImage() {
+        preview.src = "";
+        preview.style.display = "none";
+        removeBtn.style.display = "none";
+        placeholderText.style.display = "block";
+        fileInput.value = "";
+        resultDiv.innerHTML = "";
+    }
+    
+    removeBtn.addEventListener("click", removeImage);
+    
+    async function fileToBase64(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    async function analyzeImage() {
+        if (!fileInput.files.length) {
+            resultDiv.innerHTML = "<p>⚠️ Wgraj zdjęcie sylwetki przed analizą.</p>";
+            return;
+        }
+    
+        resultDiv.innerHTML = "<p>Analizuję sylwetkę...</p>";
+    
+        const file = fileInput.files[0];
+        const base64Data = await fileToBase64(file);
+        const imagePart = { inlineData: { data: base64Data, mimeType: file.type } };
+    
+        // Zmodyfikowany prompt z prośbą o procent tkanki tłuszczowej
+        const prompt = "Przeanalizuj sylwetkę na zdjęciu i podaj: 1) Typ budowy ciała (ektomorfik, mezomorfik, endomorfik), 2)    Przybliżony procent tkanki tłuszczowej (w %), 3) Jedno krótkie zalecenie (np. siłownia, dieta, cardio). Odpowiedź w maksymalnie 3 zdaniach, ale koniecznie podaj % tkanki tłuszczowej. Format odpowiedzi: Typ budowy: X, Tkanka tłuszczowa: X%, Zalecenie: X.";
+    
+        try {
+            const response = await model.generateContent([prompt, imagePart]);
+            const responseText = response.response.text();
+            
+            // Wyciągnięcie informacji o tkance tłuszczowej
+            let fatPercentage = "N/A";
+            const fatMatch = responseText.match(/[Tt]kanka tłuszczowa:?\s*(\d+(?:\.\d+)?)%/);
+            if (fatMatch && fatMatch[1]) {
+                fatPercentage = fatMatch[1];
+            }
+            
+            // Wyświetlenie wyniku z wyróżnionym % tkanki tłuszczowej
+            const formattedResponse = responseText.replace(
+                /([Tt]kanka tłuszczowa:?\s*\d+(?:\.\d+)?)%/g, 
+                '<span class="fat-percent">$1%</span>'
+            );
+            
+            resultDiv.innerHTML = `
+                <p><strong>Wynik analizy:</strong></p>
+                <p>${formattedResponse}</p>
+            `;
+        } catch (error) {
+            resultDiv.innerHTML = "<p>Błąd analizy. Spróbuj ponownie.</p>";
+            console.error("Błąd:", error);
+        }
+    }
+    
+    analyzeBtn.addEventListener("click", analyzeImage);</script>
+
+</body>
+
+</html>

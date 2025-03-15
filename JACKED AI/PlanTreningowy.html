@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asystent Gemini AI - Plan Treningowy</title>
+    <link rel="stylesheet" href="CSS/index.css">
+    <link rel="stylesheet" href="CSS/PlanTreningowy.css">
+      
+</head>
+
+<body>
+
+    <header>
+        <h1>
+            <a href="HomePage.html">
+                <img class="logo" src="images/w.png">
+            </a>
+        </h1>
+
+        <div class="hamburger-menu">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <nav>
+            <a href="HomePage.html">Strona Główna</a>
+            <a href="kalendarz.html">KALENDARZ</a>
+            <a href="PlanTreningowy.html">Plan Treningowy</a>
+            <a href="dieta.html">Dieta</a>
+            <a href="Analiza.html">Analiza Sylwetki</a>
+            <a href="Zespol.html">O Zespole</a>
+        </nav>
+
+        <div class="menu-mobile">
+            <a href="HomePage.html">Strona Główna</a>
+            <a href="kalendarz.html">KALENDARZ</a>
+            <a href="PlanTreningowy.html">Plan Treningowy</a>
+            <a href="dieta.html">Dieta</a>
+            <a href="Analiza.html">Analiza Sylwetki</a>
+            <a href="Zespol.html">O Zespole</a>
+        </div>
+    </header>
+
+    <img class="image" src="images/gradient.png" alt="gradient">
+    <div class="layer-blur"></div>
+
+    <div class="main-content">
+        <!-- Lewa kolumna z formularzem -->
+        <section class="robot-section">
+            <div class="training-container">
+                <h2>Plan Treningowy</h2>
+                <form id="planForm">
+                    <label for="dni">Ilość dni treningowych:</label>
+                    <input type="number" id="dni" name="dni" min="1" max="7" required>
+
+                    <label for="typ">Typ planu:</label>
+                    <select id="typ" name="typ">
+                        <option value="FBW">FBW (Full Body Workout)</option>
+                        <option value="Push-Pull">Push-Pull</option>
+                        <option value="Split">Split</option>
+                    </select>
+
+                    <label for="ciezary">Ćwiczenia:</label>
+                    <select id="ciezary" name="ciezary">
+                        <option value="Wolne ciężary">Wolne ciężary</option>
+                        <option value="Maszyny">Maszyny</option>
+                        <option value="Mieszane">Mieszane</option>
+                    </select>
+
+                    <label>Partie mięśniowe priorytetowe:</label>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="klatka" name="partie" value="klatka">
+                        <label for="klatka">Klatka piersiowa</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="plecy" name="partie" value="plecy">
+                        <label for="plecy">Plecy</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="nogi" name="partie" value="nogi">
+                        <label for="nogi">Nogi</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="barki" name="partie" value="barki">
+                        <label for="barki">Barki</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="ramiona" name="partie" value="ramiona">
+                        <label for="ramiona">Ramiona</label>
+                    </div>
+
+                    <button id="generate-btn" type="button">Zapisz plan</button>
+                </form>
+                <div id="output" hidden></div>
+                <div id="loading">Generowanie odpowiedzi...</div>
+            </div>
+        </section>
+
+        <!-- Prawa kolumna z wynikami -->
+        <section class="ai-section">
+            <div class="container">
+                <div class="result-container" id="result">
+                    <div class="chat-container" id="chat-container">
+                        <!-- Tutaj pojawi się odpowiedź AI w stylu ChatGPT -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+
+ 
+
+    <script type="module">
+         // Import biblioteki Google Generative AI
+ import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+// Inicjalizacja API z kluczem
+const genAI = new GoogleGenerativeAI("AIzaSyBo-TkZvywAY5l6AglPCvsoMPOlTocAfXE");
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+// Elementy DOM
+const generateBtn = document.getElementById("generate-btn");
+const resultElement = document.getElementById("result");
+const chatContainer = document.getElementById("chat-container");
+const loadingElement = document.getElementById("loading");
+const outputElement = document.getElementById("output");
+
+// Historia konwersacji
+let chat = model.startChat({
+    generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+    }
+});
+
+// Funkcja ograniczająca liczbę słów do 200
+function limitWords(text, limit = 400) {
+    const words = text.split(/\s+/);
+    if (words.length <= limit) return text;
+
+    const limitedText = words.slice(0, limit).join(' ');
+    return limitedText + '... <span class="word-limit-info">(ograniczono do 200 słów)</span>';
+}
+
+// Funkcja formatująca tekst jak na zdjęciu
+function formatText(text) {
+    // Najpierw usuń niechciane formatowanie
+    let formattedText = text;
+
+    // Zastąp nagłówki dni treningowych
+    formattedText = formattedText.replace(/(Dzień \d+: [^\.]+)/g, '<h1>$1</h1>');
+
+    // Identyfikuj sekcje numerowane (1. Rozgrzewka, 2. Trening, itp.)
+    formattedText = formattedText.replace(/(\d+\.\s+[^:]+):/g, '$1:');
+
+    // Przekształć tekst na strukturę list zgodną z formatem na zdjęciu
+    const lines = formattedText.split('\n');
+    let resultHtml = '';
+    let inOl = false;
+    let inUl = false;
+    let currentSection = '';
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+
+        if (line === '') continue;
+
+        // Nagłówek dnia
+        if (line.match(/<h1>/)) {
+            if (inUl) {
+                resultHtml += '</ul>';
+                inUl = false;
+            }
+            if (inOl) {
+                resultHtml += '</ol>';
+                inOl = false;
+            }
+            resultHtml += line;
+            continue;
+        }
+
+        // Początek numerowanej sekcji (np. "1. Rozgrzewka (10-15 minut):")
+        const sectionMatch = line.match(/^(\d+)\.\s+(.+?):\s*$/);
+        if (sectionMatch) {
+            if (inUl) {
+                resultHtml += '</ul>';
+                inUl = false;
+            }
+
+            if (inOl) {
+                resultHtml += '</ol>';
+            }
+
+            resultHtml += '<ol>';
+            inOl = true;
+            currentSection = sectionMatch[2];
+            resultHtml += `<li>${currentSection}:</li>`;
+            continue;
+        }
+
+        // Element listy punktowanej
+        if (line.match(/^[\•\-\*]\s+/) || (currentSection && !line.match(/^\d+\./))) {
+            if (!inUl) {
+                resultHtml += '<ul>';
+                inUl = true;
+            }
+
+            // Usuń znaczniki punktowania, jeśli są
+            line = line.replace(/^[\•\-\*]\s+/, '');
+            resultHtml += `<li>${line}</li>`;
+            continue;
+        }
+
+        // Kontynuacja numerowanej sekcji (np. "2. Trening właściwy:")
+        const nextSectionMatch = line.match(/^(\d+)\.\s+(.+):$/);
+        if (nextSectionMatch) {
+            if (inUl) {
+                resultHtml += '</ul>';
+                inUl = false;
+            }
+
+            currentSection = nextSectionMatch[2];
+            resultHtml += `<li>${currentSection}:</li>`;
+            continue;
+        }
+
+        // Zwykły tekst
+        if (inUl) {
+            resultHtml += '</ul>';
+            inUl = false;
+        }
+
+        resultHtml += `<p>${line}</p>`;
+    }
+
+    // Zamknięcie otwartych list
+    if (inUl) resultHtml += '</ul>';
+    if (inOl) resultHtml += '</ol>';
+
+    return resultHtml;
+}
+
+// Funkcja wyświetlająca wiadomość w stylu ChatGPT
+function appendMessage(content, isUser) {
+    // Tworzenie wierszy ChatGPT
+    const messageRow = document.createElement('div');
+    messageRow.classList.add('message-row');
+    messageRow.classList.add(isUser ? 'user-row' : 'ai-row');
+
+    // Tworzenie avatara
+    const avatarDiv = document.createElement('div');
+    avatarDiv.classList.add('message-avatar');
+    avatarDiv.classList.add(isUser ? 'user-avatar' : 'ai-avatar');
+    avatarDiv.innerHTML = isUser ? 'U' : 'AI';
+
+    // Tworzenie kontenera treści
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('message-content');
+
+    if (isUser) {
+        // Wyświetlenie wiadomości użytkownika
+        contentDiv.textContent = content;
+        messageRow.appendChild(avatarDiv);
+        messageRow.appendChild(contentDiv);
+        chatContainer.innerHTML = ''; // Czyszczenie poprzednich wiadomości
+        chatContainer.appendChild(messageRow);
+    } else {
+        // Ograniczenie do 200 słów
+        const limitedContent = limitWords(content, 400);
+
+        // Dodanie wiersza AI z animacją pisania
+        const typingContent = document.createElement('span');
+        typingContent.classList.add('typing-animation');
+        contentDiv.appendChild(typingContent);
+
+        messageRow.appendChild(avatarDiv);
+        messageRow.appendChild(contentDiv);
+        chatContainer.appendChild(messageRow);
+
+        // Formatowanie odpowiedzi AI zgodnie z przykładem ze zdjęcia
+        const formattedContent = formatText(limitedContent);
+
+        // Pobieramy tekst bez HTML do animacji
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = formattedContent;
+        const plainText = tempDiv.textContent;
+
+        // Animacja pisania
+        let i = 0;
+        function typeWriter() {
+            if (i < plainText.length) {
+                typingContent.textContent += plainText.charAt(i);
+                i++;
+                resultElement.scrollTop = resultElement.scrollHeight;
+                setTimeout(typeWriter, 5);
+            } else {
+                // Po zakończeniu animacji, wyświetlamy pełną sformatowaną treść
+                contentDiv.innerHTML = formattedContent;
+                resultElement.scrollTop = resultElement.scrollHeight;
+            }
+        }
+
+        typeWriter();
+    }
+}
+
+// Funkcja generująca odpowiedź
+async function generujWiadomoscIOdpowiedz() {
+    let dni = document.getElementById("dni").value;
+    if (!dni) {
+        alert("Proszę podać liczbę dni treningowych!");
+        return;
+    }
+
+    let typ = document.getElementById("typ").value;
+    let ciezary = document.getElementById("ciezary").value;
+
+    let checkboxes = document.querySelectorAll('input[name="partie"]:checked');
+    let partie = [];
+    checkboxes.forEach((checkbox) => {
+        partie.push(checkbox.value);
+    });
+
+    let partieText = partie.length > 0 ? partie.join(", ") : "brak priorytetów";
+    let wiadomosc = `Wygeneruj ${dni}-dniowy plan treningowy typu ${typ} korzystając z ${ciezary}, w którym najbardziej zależy mi na: ${partieText}. 
+
+Tekst musi być sformatowany
+Ćwiczenia mają być wypisane od myślinków;
+Odpowiedź powinna być zwięzła i ograniczona do maksymalnie 400 słów.
+Ćwiczenia muszą mieć wypisaną ilość serii i powtórzeń`;
+
+    outputElement.innerText = wiadomosc;
+    appendMessage(wiadomosc, true);
+    loadingElement.style.display = "block";
+
+    try {
+        const result = await chat.sendMessage(wiadomosc);
+        appendMessage(result.response.text(), false);
+    } catch (error) {
+        const errorDiv = document.createElement('div');
+        errorDiv.classList.add('message-row', 'ai-row');
+        errorDiv.innerHTML = `
+    <div class="message-avatar ai-avatar">AI</div>
+    <div class="message-content">
+        <p><strong>Błąd:</strong> ${error.message}</p>
+    </div>
+`;
+        chatContainer.appendChild(errorDiv);
+    } finally {
+        loadingElement.style.display = "none";
+    }
+}
+
+// Nasłuchiwanie kliknięcia przycisku
+generateBtn.addEventListener("click", generujWiadomoscIOdpowiedz);
+    </script>
+    <script src="JS/HamburgerMenu.js"></script>
+</body>
+
+</html>
