@@ -29,18 +29,18 @@
             <a href="HomePage.html">Strona Główna</a>
             <a href="kalendarz.html">KALENDARZ</a>
             <a href="PlanTreningowy.html">Plan Treningowy</a>
-            <a href="dieta.html">Dieta</a>
+            <a href="dieta.html">Asystent Dietetyczny</a>
             <a href="Analiza.html">Analiza Sylwetki</a>
-            <a href="Zespol.html">O Zespole</a>
+            <a href="Zespol.html">TEAM</a>
         </nav>
 
         <div class="menu-mobile">
             <a href="HomePage.html">Strona Główna</a>
             <a href="kalendarz.html">KALENDARZ</a>
             <a href="PlanTreningowy.html">Plan Treningowy</a>
-            <a href="dieta.html">Dieta</a>
+            <a href="dieta.html">Asystent Dietetyczny</a>
             <a href="Analiza.html">Analiza Sylwetki</a>
-            <a href="Zespol.html">O Zespole</a>
+            <a href="Zespol.html">TEAM</a>
         </div>
     </header>
 
@@ -54,7 +54,7 @@
                 <h2>Plan Treningowy</h2>
                 <form id="planForm">
                     <label for="dni">Ilość dni treningowych:</label>
-                    <input type="number" id="dni" name="dni" min="1" max="7" required>
+                    <input type="number" id="dni" name="dni" min="1" max="7" value="3" required>
 
                     <label for="typ">Typ planu:</label>
                     <select id="typ" name="typ">
@@ -95,7 +95,7 @@
                     <button id="generate-btn" type="button">Zapisz plan</button>
                 </form>
                 <div id="output" hidden></div>
-                <div id="loading">Generowanie odpowiedzi...</div>
+                <div id="loading" >Generowanie odpowiedzi...</div>
             </div>
         </section>
 
@@ -336,7 +336,6 @@ Odpowiedź powinna być zwięzła i ograniczona do maksymalnie 400 słów.
 Ćwiczenia muszą mieć wypisaną ilość serii i powtórzeń`;
 
     outputElement.innerText = wiadomosc;
-    appendMessage(wiadomosc, true);
     loadingElement.style.display = "block";
 
     try {

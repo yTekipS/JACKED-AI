@@ -248,7 +248,7 @@ main {
 }
 
 #prompt-input:focus {
-    border-color: #FFF4C5;
+    border-color: #7edada;
     box-shadow: 0 0 8px rgba(255, 244, 197, 0.5);
 }
 
@@ -265,7 +265,7 @@ main {
     display: none;
     text-align: center;
     margin: 20px 0;
-    color: #FFF4C5;
+    color: #00ffff;
     font-style: italic;
 }
 
@@ -338,7 +338,7 @@ main {
 }
 
 .user-message {
-    color: #FFF4C5;
+    color: white;
     background-color: rgba(255, 244, 197, 0.05);
     padding: 15px;
     border-radius: 8px 8px 8px 0;
@@ -351,7 +351,7 @@ main {
 .user-message strong {
     display: block;
     margin-bottom: 8px;
-    color: #FFF4C5;
+    color: #00ffff;
     font-weight: 600;
     opacity: 0.9;
     font-size: 0.9em;
